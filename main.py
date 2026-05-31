@@ -60,13 +60,14 @@ max_consume = None
 strides = None
 md5key = None
 platform = None
+auto_task_folder = None
 
 def set_args(conf_path: str):
     global my_host, default_key, CipherKeyEncrypted, my_app_edition, my_token, my_device_id
     global my_key, my_device_name, my_sys_edition, my_utc, my_uuid, my_sign
     global min_distance, allow_overflow_distance, single_mileage_min_offset, single_mileage_max_offset
     global cadence_min_offset, cadence_max_offset, split_count, exclude_points, min_consume, max_consume
-    global strides, PUBLIC_KEY, PRIVATE_KEY, md5key, platform
+    global strides, PUBLIC_KEY, PRIVATE_KEY, md5key, platform, auto_task_folder
     
     # 加载配置文件
     conf = configparser.ConfigParser()
@@ -100,6 +101,7 @@ def set_args(conf_path: str):
     min_consume = float(conf.get("Run", "min_consume")) # 配速最小和最大
     max_consume = float(conf.get("Run", "max_consume"))
     strides = float(conf.get("Run", "strides"))
+    auto_task_folder = conf.get("Run", "auto_task_folder")
 
     PUBLIC_KEY = b64decode(conf.get("Yun", "PublicKey"))
     PRIVATE_KEY = b64decode(conf.get("Yun", "PrivateKey"))
@@ -586,17 +588,34 @@ class Yun_For_New:
         resp = default_post("/run/finish", json.dumps(data))
         print(resp)
 
+def auto_login_no_save():
+    """自动登录获取凭证，不保存到config，仅本次会话使用"""
+    print("[自动模式] token为空，正在使用config中的账户自动登录...")
+    login_result = Login.main()
+    if login_result is None:
+        print("[自动模式] 登录失败，请检查config.ini中的[Login]配置")
+        exit(1)
+    token, device_id, device_name, uuid, sys_edition = login_result
+    print(f"[自动模式] 登录成功，凭证仅本次使用")
+    return token, device_id, device_name, uuid, sys_edition
+
 def main(run = True):
     args = parse_args()
     cfg_path = args.config_path
-    
+
     # 设置全局变量
     user_info = set_args(cfg_path)
     global my_token, my_device_id, my_device_name, my_uuid, my_sys_edition
-    if not args.auto_run:
+
+    if args.auto_run:
+        # 自动模式：无token时自动登录，不保存凭证
+        if len(my_token) == 0:
+            my_token, my_device_id, my_device_name, my_uuid, my_sys_edition = auto_login_no_save()
+    else:
+        # 手动模式：无token时走原有交互式登录（会保存）
         if len(my_token) == 0:
             my_token, my_device_id, my_device_name, my_uuid, my_sys_edition = noTokenLogin()
-        
+    
         print("确定数据无误：")
     print("Token: ".ljust(15) + my_token)
     print('deviceId: '.ljust(15) + my_device_id)
@@ -616,11 +635,18 @@ def main(run = True):
     try:
         if sure == 'y':
             if args.auto_run:
-                print_table = 'y'
+                # 自动模式：强制打表，从配置的文件夹随机选取任务
+                path = auto_task_folder
+                print(f"[自动模式] 打表文件夹: {path}")
+                is_drift = True
+                print(f"[自动模式] 漂移: 是")
+                Yun = Yun_For_New(auto_generate_task=False)
+                Yun.start()
+                Yun.do_by_points_map(path=path, random_choose=True, isDrift=is_drift)
+                Yun.finish_by_points_map()
             else:
                 print_table = input("打表模式(固定路线，无需高德地图key)：[y/n]")
-            if print_table == 'y':
-                if not args.auto_run:
+                if print_table == 'y':
                     print("warning:\n打表模式下\n跑步的步频、配速等信息受tasklist.json控制，不会读取map.json，config.ini的跑步信息失效")
                     choice = input("请选择校区（1.河南医专,2.自定义(文件夹tasks_else)）")
                     if(choice == '1'): path = "./tasks_hnyz"
@@ -635,23 +661,17 @@ def main(run = True):
                     Yun.do_by_points_map(path=path, isDrift=driftChoice)
                     Yun.finish_by_points_map()
                 else:
-                    path = args.task_path
-                    Yun = Yun_For_New(auto_generate_task=False)
-                    Yun.start()
-                    Yun.do_by_points_map(path=path, random_choose=True, isDrift=args.drift)
-                    Yun.finish_by_points_map()
-            else:
-                quick_model = input("快速模式(瞬间跑完)：[y/n]")
-                if quick_model == 'y':
-                    Yun = Yun_For_New()
-                    Yun.start()
-                    Yun.finish()
-                else:
-                    Yun = Yun_For_New()
-                    print("起始点：[" + Yun.my_point + ']')
-                    Yun.start()
-                    Yun.do()
-                    Yun.finish()
+                    quick_model = input("快速模式(瞬间跑完)：[y/n]")
+                    if quick_model == 'y':
+                        Yun = Yun_For_New()
+                        Yun.start()
+                        Yun.finish()
+                    else:
+                        Yun = Yun_For_New()
+                        print("起始点：[" + Yun.my_point + ']')
+                        Yun.start()
+                        Yun.do()
+                        Yun.finish()
         else:
             print("退出。")
     except Exception as e:

@@ -41,7 +41,7 @@ class Login():
         iniSysedition = conf.get('User', 'sys_edition')
         appedition = conf.get('Yun', 'app_edition')
         platform = conf.get('Yun', 'platform')
-        schoolName = conf.get('Yun','school_name') or input("未找到学校名称，请输入学校名称：")
+        schoolName = conf.get('Yun','school_name') #or input("未找到学校名称，请输入学校名称：")
         conf.set('Yun','school_Name',schoolName)
         url, scId = getschool_Url_Id(schoolName)
         if url and scId:
