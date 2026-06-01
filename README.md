@@ -1,6 +1,25 @@
 ### 简介：
+复刻自[Zirconium233/yunForNewVersion](https://github.com/Zirconium233/yunForNewVersion.git)
 
-这是(3.4.8)云运动代跑脚本，可以进行云运动全自动代跑。我对河南医学高等专科进行了适配，可以正常使用脚本登陆和使用打表功能。
+这是(3.5.7)云运动代跑脚本，可以进行云运动全自动代跑。我对河南医学高等专科进行了适配，可以正常使用脚本登陆和使用打表功能。
+
+**以下是我做的修改**：
+
+### 更新记录：
+
+2026.06.1
+
+1. 修改[batch_run.py](./tools/batch_run.py)中硬编码的`schoolId`，现在可以从[multi.ini](./configs/multi.ini)读取。
+2. 修改[batch_run.py](./tools/batch_run.py)中硬编码的`school_login_url`,现在可以从[multi.ini](./configs/multi.ini)读取。
+
+2026.05.31
+
+1. 修改了[config.ini](./config.ini),以适配河南医学高等专科学校。添加`auto_task_folder`参数实现了在配置文件中设置打表文件夹的设置。
+2. 修改了[main.py](./main.py),修改了-a参数，实现了真正的全自动，无token时自动根据账号密码登陆，默认不写入配置文件仅一次使用。
+3. 添加了[batch_run.py](./tools/batch_run.py),[multi.ini](./configs/multi.ini),[run.py](./run.py)。重构了多人同时跑步的工具。用法可见[run.md](./run.md)。暂时并未实现高德API规划，只能使用打表功能。
+
+> [!WARNING]
+> 以下是原作者的内容
 
 **比下面提示更重要的提示**：
 

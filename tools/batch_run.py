@@ -38,7 +38,8 @@ class YunConfig:
         self.private_key = b64decode(conf.get(section, "PrivateKey"))
         self.md5key = conf.get(section, "md5key")
         self.platform = conf.get(section, "platform")
-
+        self.school_id = conf.get(section, "school_id", fallback="")
+        self.school_login_url = conf.get(section, "school_login_url", fallback="appLogin")
         # 用户
         self.token = conf.get(section, "token")
         self.device_id = conf.get(section, "device_id")
@@ -132,11 +133,11 @@ class YunRunner:
         uuid = cfg.uuid or device_id
         device_name = cfg.device_name or "Xiaomi"
         sys_edition = cfg.sys_edition or "14"
-        login_url = cfg.school_host + "/login/appLogin"
+        login_url = cfg.school_host + "/login/" + cfg.school_login_url
 
         encrypt_data = json.dumps({
             "password": cfg.login_password,
-            "schoolId": "161",
+            "schoolId": cfg.school_id or "161",
             "userName": cfg.login_username,
             "type": "1"
         })
