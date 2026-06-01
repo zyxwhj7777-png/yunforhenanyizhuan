@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-云运动批量跑步入口
-用法:
-  python run.py -f configs/multi.ini -a              # 串行自动跑
-  python run.py -f configs/multi.ini -a --parallel   # 并行自动跑
-  python run.py -f configs/multi.ini -a -p 张三,李四  # 只跑指定的人
+  python run.py                                # 默认并行自动跑
+  python run.py -f configs/multi.ini           # 指定配置文件，并行自动跑
+  python run.py -f configs/multi.ini -p 张三,李四  # 只跑指定的人
+  python run.py --serial                       # 串行执行
+  python run.py --no-drift                     # 不添加漂移
 """
 import argparse
 import sys
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -21,12 +22,12 @@ def parse_args():
     parser = argparse.ArgumentParser(description='云运动批量跑步脚本')
     parser.add_argument('-f', '--config', type=str, default='./configs/multi.ini',
                         help='多人配置文件路径 (默认: configs/multi.ini)')
-    parser.add_argument('-a', '--auto', action='store_true',
-                        help='自动跑步模式（打表+漂移，无需交互）')
+    parser.add_argument('-m', '--auto', action='store_false',default=True,
+                        help='手动跑步模式（默认自动模式，打表+漂移，无需交互）')
     parser.add_argument('-p', '--persons', type=str, default='',
                         help='只跑指定的人，逗号分隔 (如: 张三,李四)')
-    parser.add_argument('--parallel', action='store_true',
-                        help='并行执行（每人一个线程）')
+    parser.add_argument('--serial', action='store_true',
+                        help='串行执行（依次执行）')
     parser.add_argument('--workers', type=int, default=0,
                         help='并行线程数 (默认=人数)')
     parser.add_argument('--task-folder', type=str, default='',
@@ -72,17 +73,19 @@ def main():
             sys.exit(1)
 
     print(f"{'='*50}")
+    now = datetime.now()
+    print(now.strftime("%Y-%m-%d %H:%M:%S"))
     print(f"  云运动批量跑步")
     print(f"  配置文件: {args.config}")
     print(f"  人员数量: {len(configs)}")
     print(f"  人员列表: {', '.join(c.name for c in configs)}")
-    print(f"  执行模式: {'并行' if args.parallel else '串行'}")
+    print(f"  执行模式: {'并行' if not args.serial else '串行'}")
     print(f"  自动模式: {'是' if args.auto else '否'}")
     print(f"{'='*50}\n")
 
     start = time.time()
 
-    if args.parallel:
+    if not args.serial:
         # 并行执行
         max_workers = args.workers if args.workers > 0 else len(configs)
         results = []

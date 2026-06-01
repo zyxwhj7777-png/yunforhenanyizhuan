@@ -8,27 +8,30 @@
 
 | 文件 | 说明 |
 |------|------|
-| `run.py` | 新入口，支持 `-f` 指定多人配置、`-a` 自动模式、`--parallel` 并行执行 |
+| `run.py` | 新入口，支持 `-f` 指定多人配置，默认并行自动模式 |
 | `tools/batch_run.py` | 核心模块：`YunConfig`（配置类）+ `YunRunner`（执行器），无全局变量 |
 | `configs/multi.ini` | 多人配置模板，`[DEFAULT]` 放公共配置，`[person:xxx]` 放个人信息 |
 
 ## 用法
 
 ```bash
-# 串行执行（一个人跑完跑下一个）
-python run.py -f configs/multi.ini -a
+# 默认：并行自动跑（零参数直接执行）
+python run.py
 
-# 并行执行（所有人同时跑）
-python run.py -f configs/multi.ini -a --parallel
+# 指定配置文件
+python run.py -f configs/multi.ini
 
 # 只跑指定的人
-python run.py -f configs/multi.ini -a --parallel -p 张三,李四
+python run.py -f configs/multi.ini -p 张三,李四
+
+# 串行执行（一个人跑完跑下一个）
+python run.py --serial
 
 # 限制并发数
-python run.py -f configs/multi.ini -a --parallel --workers 2
+python run.py --workers 2
 
 # 指定任务文件夹、不加漂移
-python run.py -f configs/multi.ini -a --task-folder ./tasks_else --no-drift
+python run.py --task-folder ./tasks_else --no-drift
 ```
 
 ## 配置格式

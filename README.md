@@ -11,6 +11,7 @@
 
 1. 修改[batch_run.py](./tools/batch_run.py)中硬编码的`schoolId`，现在可以从[multi.ini](./configs/multi.ini)读取。
 2. 修改[batch_run.py](./tools/batch_run.py)中硬编码的`school_login_url`,现在可以从[multi.ini](./configs/multi.ini)读取。
+3. 修改[batch_run.py](./tools/batch_run.py)逻辑，默认自动并行执行。
 
 2026.05.31
 
