@@ -288,7 +288,20 @@ class YunRunner:
         }
         resp = self._default_post("/run/finish", json.dumps(finish_data))
         print(f"[{self.cfg.name}] 完成! {resp}")
-        return True
+
+        # 返回跑步详情
+        mileage = task_map['data']['recordMileage']
+        duration = task_map['data']['duration']
+        pace = task_map['data']['recodePace']
+        return {
+            'mileage': mileage,
+            'duration': duration,
+            'pace': pace,
+            'task_file': chosen,
+            'drift': drift,
+            'run_record_id': run_record_id,
+            'finish_resp': resp,
+        }
 
     def _send_split(self, points, task_map, cadence_min, cadence_max, school_id, run_record_id, user_name):
         data = {
